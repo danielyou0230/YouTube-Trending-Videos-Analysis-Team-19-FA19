@@ -64,7 +64,7 @@ def reformat_time(df, col, template):
     df = df[df[col].notnull()]
 
 
-def fill_category(df, src="./Past/input/US_category_id.json"):
+def fill_category(df, src="./data/category_id/US_category_id.json"):
     """
     Insert category ID to the given input pd.DataFrame `df` according
     to the path `src`. Insertion is performed inplace.
