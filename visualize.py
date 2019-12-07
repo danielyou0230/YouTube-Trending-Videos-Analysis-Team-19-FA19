@@ -124,8 +124,16 @@ def plot_publish_info(df, country="Total", pattern="%Y-%m-%d %H:%M:%S"):
     
     # Create columns for published weekday and hour for analysis
     # Abbreviation of weekday string: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+    delta = 0
+    if country == "US":
+        delta = 0
+    if country == "IN":
+        delta = 5
+    if country == "RU":
+        delta = 3
+    # Change the time zone of each country
     subset["pub_weekday"] = subset["publish_time"].apply(lambda x: x.strftime('%a'))
-    subset["pub_hour"] = subset["publish_time"].apply(lambda x: x.hour)
+    subset["pub_hour"] = subset["publish_time"].apply(lambda x: (x.hour+delta) % 24)
 
     # Publish week day
     data = subset["pub_weekday"].value_counts().to_frame().reset_index()\
