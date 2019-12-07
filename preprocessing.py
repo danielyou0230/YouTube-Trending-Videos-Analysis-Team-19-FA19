@@ -36,7 +36,7 @@ def cleanup_df(df):
     Pipeline for cleaning up the dataframe.
 
     Arg:
-        df(pandas.DataFrame): Dataframe to be processed.
+        df(pandas.DataFrame): Dataframe to be processed.a
     """
     # Fill nan with some default values
     df["description"] = df["description"].fillna(value="")

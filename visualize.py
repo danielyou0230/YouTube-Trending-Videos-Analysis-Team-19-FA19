@@ -119,6 +119,7 @@ def plot_publish_info(df, country="Total", pattern="%Y-%m-%d %H:%M:%S"):
     
     subset = df[df['country'] == country] if country != "Total" else df
     # Convert to datetime obkect
+    subset = subset[subset["publish_time"].notnull()]
     subset["publish_time"] = subset["publish_time"].apply(
         lambda x: datetime.datetime.strptime(str(x), pattern))
     
