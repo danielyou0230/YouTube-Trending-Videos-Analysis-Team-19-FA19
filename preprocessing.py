@@ -6,8 +6,10 @@ import json
 
 def load_all_csv(pattern):
     """
+    Load all json files that match in the given glob pattern.
+    
     Arg:
-        pattern(str)
+        pattern(str): Pattern for glob to match files.
     """
     assert isinstance(pattern, str)
     
@@ -31,8 +33,10 @@ def load_all_csv(pattern):
 
 def cleanup_df(df):
     """
+    Pipeline for cleaning up the dataframe.
+
     Arg:
-        df(pandas.DataFrame)
+        df(pandas.DataFrame): Dataframe to be processed.
     """
     # Fill nan with some default values
     df["description"] = df["description"].fillna(value="")
@@ -49,9 +53,9 @@ def reformat_time(df, col, template):
     Reformat the date time and removed the incompleted rows
     
     Args:
-        df(pandas.DataFrame):
-        col(str):
-        template(str):
+        df(pandas.DataFrame): Dataframe to be processed.
+        col(str): Column to be reformatted.
+        template(str): Time string template for the given column.
     """
     assert isinstance(col, str)
     assert isinstance(template, str)
@@ -66,8 +70,8 @@ def fill_category(df, src="./Past/input/US_category_id.json"):
     to the path `src`. Insertion is performed inplace.
     
     Args:
-        df(pandas.DataFrame)
-        src(src):
+        df(pandas.DataFrame): Dataframe to be processed.
+        src(src): Path to category mapping file.
     """
     assert isinstance(src, str) and os.path.exists(src)
     

@@ -1,23 +1,31 @@
 import datetime
+import json
+import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import wordcloud
+import os
 
 
 def plot_correlation(df, country, brief=[], xrot=0, yrot=0):
     """
+    Plot the Pearson Correlation matrix for features in the given
+    pandas.DataFrame `df`.
     
     Args:
-        df(pandas.DataFrame):
-        country(str):
-        brief(list[str]):
-    
-    Return:
-        None
+        df(pandas.DataFrame): Dataframe to be processed.
+        country(str): Country to plot the statistics, default: showing
+            statistics of all countries.
+        brief(list[str]): Brief version of the correlation matrix, this
+            list should contain only subset of columns in `df`.
+        xrot(int): Rotation for xlabel.
+        yrot(int): Rotation for ylabel.
     """
     assert isinstance(df, pd.DataFrame)
     assert isinstance(country, str)
     assert isinstance(brief, list)
+    assert isinstance(xrot, int) and isinstance(yrot, int)
 
     subset = df[df["country"] == country]
     # subset.corr()
@@ -197,3 +205,106 @@ def plot_ranking(df, country="Total"):
             .format("all countries" if country == "Total" else country)
     plt.title(title)
     plt.tight_layout()
+
+
+def plot_duration_on_list(df, country, file, xrot=70, showcloud=False):
+    """
+    Plot duration of videos on trending list
+    
+    Args:
+        df(pandas.DataFrame): Dataframe to be processed.
+        country(str): Country to plot the statistics, default: showing
+            statistics of all countries.
+        file(str): Path to the category *.json file
+        xrot(int): Rotation for xlabel.
+    """
+    assert isinstance(df, pd.DataFrame)
+    assert isinstance(country, str)
+    assert isinstance(file, str) and os.path.exists(file)
+    assert isinstance(xrot, int)
+
+    with open(file, 'r') as f:
+        items = json.load(f)['items']
+        items_id = list(map(lambda x: x['id'], items))
+        items_title = list(map(lambda x: x['snippet']['title'], items))
+        categories = {int(k):v for k, v in zip(items_id, items_title)}
+    
+    _subset = df[df["country"] == country].reset_index()
+
+    subset = pd.DataFrame(_subset)
+    subset["trending_date"] = subset["trending_date"].astype(str)
+
+    _subset["category_id"] = _subset["category_id"].astype(int)
+
+    for i in _subset.category_id.unique():
+        # Remove entries with category_id not in given dictionary
+        if i not in categories.keys():
+            subset.drop(subset.loc[subset.category_id == i].index,
+                        inplace=True)
+    
+    # Use number as index
+    subset.set_index(np.arange(0, subset.shape[0]), inplace=True)
+    
+    # Convert columns to time format using pd-inference
+    subset.publish_time = pd.to_datetime(subset.publish_time,
+                                         infer_datetime_format=True)
+
+    subset.trending_date = pd.to_datetime(subset.trending_date,
+                                          format='%Y-%m-%d',
+                                          infer_datetime_format=True,
+                                          utc=True)
+
+    duration, begin = {}, {}
+    # Calculate the duration of each video
+    I = pd.Index(subset.video_id)
+    for vid in I.unique():
+        t = I.get_value(subset.trending_date, vid)
+        if isinstance(t, pd.datetime):
+            duration[vid] = 1
+            begin[vid] = t
+        else:
+            duration[vid] = t.shape[0]
+            begin[vid] = t.min()
+    
+    # Fill in the duration
+    subset['duration'] = subset.video_id.map(duration)
+    
+    # Calculate mean duration for videos in each category
+    mean_period = subset.groupby(['category_id']).duration.mean()
+
+    plt.figure(figsize=(9.0, 6.0), facecolor='white')
+    x = list(range(mean_period.shape[0]))
+    
+    plt.plot(x, mean_period, 'o-')
+    xlabel = mean_period.index.map(categories)
+    plt.xticks(x, labels=xlabel, rotation=xrot)
+    plt.ylim(bottom=1)
+    plt.grid(True)
+
+    title = "Average days on trending list in {}".format(country)
+    plt.xlabel("Category")
+    plt.ylabel("Duration (days)")
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
+    
+    # Wordcloud
+    if showcloud:
+        tags = subset.loc[subset.tags.str.find('none') == -1].tags
+        data = {}
+        for x in tags:
+            words = x.split('|')
+            for w in words:
+                w = w.lower().replace('\"', '')
+                data[w] = data.get(w, 0) + 1
+
+        cloud = wordcloud.WordCloud(background_color='black')
+        cloud.generate_from_frequencies(data)
+
+        plt.figure(figsize=(9.0, 6.0))
+        plt.imshow(cloud)
+        plt.axis('off')
+
+        title = "Wordcloud for {}".format(country)
+        plt.title(title)
+        plt.tight_layout(pad=0.0)
