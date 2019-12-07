@@ -11,7 +11,7 @@ The data scraping is devloped based on the Google's YouTube Trending Videos API.
 
 	-> location: src/scraper/Youtubescraper.py
 	-> run command: python src/scraper/Youtubescraper.py
-	-> description: 
+	-> description: The YouTube data scrapper is implemented through the function youtubescraper(key_path='api_key.txt',country_code_path='country_codes.txt'). You can modify the argument as your local position of the key_path and country_code_path.
 	-> data generated: data generated is stored in data/current/
 
 If you want to use the scraper to scrap the YouTube data in more countries, you can add the corresponding 2-letter country abbreviations according to ISO 3166-1 in  src/scraper/country_codes.txt. A list of all existing ones can be found [here](https://en.wikipedia.org/wiki/ISO_3166-1#Current_codes)
